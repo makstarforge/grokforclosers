@@ -386,7 +386,7 @@ details[open] .faq-plus{transform:rotate(45deg)}
 <script>
 (function(){
 var start=new Date('2026-11-30T00:00:00-05:00');
-function cd(){var ms=start-new Date();var t;if(ms<=0){t='Live now';}else{var d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5);t=d>=2?'Starts in '+d+' days':(d===1?'Starts in 1 day, '+h+' hr'+(h===1?'':'s'):'Starts in '+h+' hr'+(h===1?'':'s'));}
+function cd(){var et=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date());var today=Date.parse(et+'T00:00:00Z');var d=Math.round((Date.UTC(2026,10,30)-today)/864e5);var t=d>=2?'Starts in '+d+' days':d===1?'Starts tomorrow':d===0?'Starts today':'Live now';
 document.querySelectorAll('.cd').forEach(function(e){e.textContent=t;});}
 cd();setInterval(cd,60000);
 var bar=document.querySelector('.mcta'),hero=document.getElementById('hero-cta'),end=document.getElementById('claim'),hv=true,ev=false;
