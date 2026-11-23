@@ -75,19 +75,30 @@ summary::-webkit-details-marker{display:none}
 </head>
 <body>
 <div style="width: 100%; background: #F4F4F1; color: #121212; font-family: 'Public Sans', sans-serif; font-size: 17px; line-height: 1.55">
-<!-- WEBINAR BANNER -->
-<style>@keyframes wbpulse{0%,100%{opacity:1}50%{opacity:.35}}</style>
-<div style="background: #FFB020; color: #121212; border-bottom: 1px solid #E09A10">
-<div style="max-width: 1180px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; justify-content: center; gap: 10px 14px; flex-wrap: wrap; text-align: center; font-size: clamp(15px, 1.4vw, 17px); line-height: 1.45">
-<span style="flex: none; display: inline-flex; align-items: center; gap: 7px; background: #121212; color: #FFB020; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 999px"><span style="width: 7px; height: 7px; border-radius: 50%; background: #FF4D3D; animation: wbpulse 1.4s ease-in-out infinite"></span>LIVE WEBINAR BONUS</span>
-<span><strong style="font-weight: 800">Direct access to Tristan and his 8-figure team</strong> is only for closers who book on this page while the webinar is live.</span>
+<!-- STICKY LIVE-WEBINAR BAR (replaces header + banner) -->
+<style>
+@keyframes wbpulse{0%,100%{opacity:1}50%{opacity:.35}}
+.sd-short,.sd-brk{display:none}
+@media (max-width:599px){
+.sd-long{display:none}.sd-short{display:inline}.sd-brk{display:inline}
+.sd-bar{padding:8px 12px!important;gap:10px!important}
+.sd-logo{font-size:17px!important;line-height:1.05!important;white-space:nowrap}
+.sd-msg{flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:3px!important}
+.sd-pill{font-size:11px!important;padding:4px 10px!important}
+.sd-msgtxt{font-size:15px!important;line-height:1.15!important;white-space:nowrap}
+.sd-join{font-size:14px!important;padding:10px 14px!important}
+}
+@media (max-width:359px){.sd-msgtxt{white-space:normal!important;font-size:14px!important}}
+</style>
+<header style="position: sticky; top: 0; z-index: 40; background: #FFB020; color: #121212; border-bottom: 1px solid #E09A10">
+<div class="sd-bar" style="max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 12px 18px">
+<div class="sd-logo" style="flex: none; font-family: 'Archivo', sans-serif; font-weight: 900; font-stretch: 112%; font-size: 22px; letter-spacing: -0.01em">Grok For <br class="sd-brk">Closers</div>
+<span aria-hidden="true" style="flex: none; width: 1px; align-self: stretch; margin: 4px 0; background: rgba(18,18,18,0.45)"></span>
+<div class="sd-msg" style="flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 8px 16px">
+<span class="sd-pill" style="flex: none; display: inline-flex; align-items: center; gap: 7px; background: #121212; color: #FFB020; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: 0.04em; padding: 6px 12px; border-radius: 999px; white-space: nowrap"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FF4D3D; animation: wbpulse 1.4s ease-in-out infinite"></span><span class="sd-long">LIVE WEBINAR BONUS</span><span class="sd-short">LIVE BONUS</span></span>
+<span class="sd-msgtxt" style="font-family: 'Archivo', sans-serif; font-weight: 800; font-size: clamp(16px, 1.8vw, 22px); line-height: 1.2"><span class="sd-long">Get direct access to Tristan + his 8-figure team.</span><span class="sd-short">Access Tristan + team</span></span>
 </div>
-</div>
-<!-- STICKY TOP BAR + COUNTDOWN -->
-<header style="position: sticky; top: 0; z-index: 40; background: #121212; color: #F4F4F1; border-bottom: 1px solid #2A2A28">
-<div style="max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
-<div style="font-family: 'Archivo', sans-serif; font-weight: 900; font-stretch: 112%; font-size: 20px; letter-spacing: -0.01em">Grok For <span style="color: #FFB020">Closers</span></div>
-<a href="https://buy.stripe.com/7sYbJ354pazNanZaPQ4Ja00?prefilled_promo_code=SAMEDAY" style="flex: none; background: #FFB020; color: #121212; text-decoration: none; font-weight: 800; font-size: 15px; padding: 12px 16px; border-radius: 8px; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center">Join now</a>
+<a class="sd-join" href="https://buy.stripe.com/7sYbJ354pazNanZaPQ4Ja00?prefilled_promo_code=SAMEDAY" style="flex: none; background: #121212; color: #F4F4F1; text-decoration: none; font-weight: 800; font-size: 15px; padding: 12px 18px; border-radius: 10px; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; white-space: nowrap">Join now</a>
 </div>
 </header>
 
