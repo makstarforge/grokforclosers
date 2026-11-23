@@ -358,21 +358,21 @@ summary::-webkit-details-marker{display:none}
 </div>
 </section>
 
-<!-- LOOM DEMO -->
+<!-- VIDEO DEMO -->
 <section style="background: #FFFFFF; color: #121212; border-top: 1px solid #ECEBE5">
 <div style="max-width: 1180px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) 20px">
 <h2 style="margin: 0 0 clamp(24px, 3.5vw, 40px); font-family: 'Archivo', sans-serif; font-weight: 900; font-stretch: 108%; font-size: clamp(32px, 4.2vw, 54px); line-height: 1.08; letter-spacing: -0.025em; text-wrap: balance">Let Me Show You The AI Bots I&rsquo;ve Built To Help You <span style="background: linear-gradient(transparent 58%, #FFB020 58%, #FFB020 92%, transparent 92%); padding: 0 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone">Find, Follow Up With, And Close</span> Those Deals</h2>
 <div style="position: relative; width: 100%; aspect-ratio: 16 / 9; background: #121212; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(18,18,18,0.18)">
-<div id="loom-thumb">
-<button type="button" id="loom-btn" aria-label="Play video" style="position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; cursor: pointer; background: #121212 url('assets/loom-thumbnail.jpg') center / cover no-repeat">
+<div id="video-thumb">
+<button type="button" id="video-btn" aria-label="Play video" style="position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; cursor: pointer; background: #121212 url('assets/video-thumbnail.jpg') center / cover no-repeat">
 <span style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18,18,18,0) 40%, rgba(18,18,18,0.55) 100%)"></span>
 <span style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: clamp(72px, 9vw, 108px); height: clamp(72px, 9vw, 108px); border-radius: 50%; background: #FFB020; box-shadow: 0 0 0 10px rgba(255,176,32,0.25), 0 14px 40px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center"><svg width="38%" height="38%" viewBox="0 0 24 24" fill="#121212" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg></span>
-<span style="position: absolute; left: clamp(14px, 2vw, 24px); bottom: clamp(12px, 2vw, 22px); background: rgba(18,18,18,0.8); color: #F4F4F1; border-radius: 999px; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: 0.06em">&#9654; WATCH THE DEMO &middot; 6:23</span>
+<span style="position: absolute; right: clamp(14px, 2vw, 24px); bottom: clamp(12px, 2vw, 22px); background: rgba(18,18,18,0.8); color: #F4F4F1; border-radius: 999px; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: 0.06em">&#9654; WATCH THE DEMO</span>
 </button>
 </div>
-<div id="loom-player"></div>
+<div id="video-player"></div>
 </div>
-<p style="margin: 14px 0 0; font-size: 15px; color: #5A5A55">Video not loading? <a href="https://www.loom.com/share/703f279fb2f74859b98e2de5c7d2c709" target="_blank" rel="noopener" style="color: #8A5A00; font-weight: 700">Watch it on Loom &rarr;</a></p>
+<p style="margin: 14px 0 0; font-size: 15px; color: #5A5A55">Video not loading? <a href="https://www.youtube.com/watch?v=WaBh04uRX-8" target="_blank" rel="noopener" style="color: #8A5A00; font-weight: 700">Watch it on YouTube &rarr;</a></p>
 </div>
 </section>
 
@@ -820,8 +820,8 @@ summary::-webkit-details-marker{display:none}
   if(inp){inp.addEventListener('input',calc);document.querySelectorAll('.calc-n').forEach(function(b){b.addEventListener('click',function(){n=Number(b.dataset.n);calc()})});calc()}
   // proof wall
   var pb=document.getElementById('pf-btn'); if(pb) pb.addEventListener('click',function(){document.getElementById('pf-wrap').className='pf-open';document.getElementById('pf-more').style.display='none'});
-  // loom
-  var lb=document.getElementById('loom-btn'); if(lb) lb.addEventListener('click',function(){document.getElementById('loom-thumb').style.display='none';document.getElementById('loom-player').innerHTML="<iframe src=\"https://www.loom.com/embed/703f279fb2f74859b98e2de5c7d2c709?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&autoplay=1\" title=\"Tristan walks through the Grok for Closers AI Bots\" frameborder=\"0\" allow=\"autoplay; fullscreen; picture-in-picture\" allowfullscreen style=\"position: absolute; inset: 0; width: 100%; height: 100%; border: 0\"></iframe>"});
+  // video
+  var lb=document.getElementById('video-btn'); if(lb) lb.addEventListener('click',function(){document.getElementById('video-thumb').style.display='none';document.getElementById('video-player').innerHTML="<iframe src=\"https://www.youtube-nocookie.com/embed/WaBh04uRX-8?autoplay=1&rel=0\" title=\"Tristan walks through the Grok for Closers AI Bots\" frameborder=\"0\" allow=\"autoplay; fullscreen; picture-in-picture; encrypted-media\" allowfullscreen style=\"position: absolute; inset: 0; width: 100%; height: 100%; border: 0\"></iframe>"});
 })();
 </script>
 </body>
