@@ -24,7 +24,7 @@ Numbers are bucketed in Eastern time. Never commit real keys to this repo.
 
 The signup form on `/onepercent` still posts straight to the Kit form (id `10176758`). When the landing URL has `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` or `utm_term`:
 
-- The post to Kit is **not modified in any way**. (An earlier version let the browser send Kit the full landing URL as the referrer so Kit's own Attribution fields could read the UTMs. A real signup showed Kit still recorded `unknown` for Referrer and every UTM field, and the change coincided with Kit showing its reCAPTCHA step, so it was removed. Kit's Attribution section is not filled by a plain form post.)
+- On submit the page lets the browser send the **full landing URL** to Kit as the referrer (for this one navigation), so Kit's own attribution can read the UTMs. Whether Kit fills its attribution fields from that is Kit's behaviour; check a test subscriber in Kit.
 - If **both** `utm_source` and `utm_campaign` are present, the page also calls `/api/kit-utm`, which tags the new subscriber `<utm_source>-<utm_campaign>` (lower-case; for example `?utm_source=webinar&utm_campaign=steckler` gives `webinar-steckler`). The function looks the tag up first and only creates it if it is missing. It only tags people who signed up in the last 30 minutes.
 - With no UTMs, nothing changes.
 

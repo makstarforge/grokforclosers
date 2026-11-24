@@ -163,8 +163,7 @@ document.getElementById('yr').textContent = new Date().getFullYear();
 /* Posts straight to the Kit form (id 10176758). Kit then redirects to the
    "You're in" page set in the form's settings. JS only validates the email. */
 /* UTM capture: read utm_* from the landing URL (remembered for this tab in case the visitor reloads
-   without the query string). The post to Kit is NOT changed in any way; the UTMs only go to our own
-   /api/kit-utm endpoint, which tags the new subscriber. With no UTMs the signup is untouched. */
+   without the query string). Used only on submit; with no UTMs the signup is untouched. */
 var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 function readUtms() {
   var out = {}, found = false;
@@ -186,6 +185,15 @@ function sendUtmsToKit(email, utms) {
     if (!sent && window.fetch) fetch('/api/kit-utm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(function () {});
   } catch (e) {}
 }
+function shareFullUrlWithKit() {
+  /* A plain form post only tells Kit the referring ORIGIN by default. For this one navigation, send the full
+     landing URL (with its utm_* parameters) so Kit's own attribution can read them. */
+  try {
+    var m = document.querySelector('meta[name="referrer"]');
+    if (!m) { m = document.createElement('meta'); m.name = 'referrer'; document.head.appendChild(m); }
+    m.content = 'unsafe-url';
+  } catch (e) {}
+}
 
 document.querySelectorAll('[data-signup]').forEach(function (form) {
   var msg = form.querySelector('.form-msg'), btn = form.querySelector('button');
@@ -198,7 +206,7 @@ document.querySelectorAll('[data-signup]').forEach(function (form) {
     }
     try { if (window.fathom && window.fathom.trackEvent) window.fathom.trackEvent('Signup submit: ' + (form.classList.contains('signup-sm') ? 'Bottom form' : 'Hero form')); } catch (err) {}
     var utms = readUtms();
-    if (utms) sendUtmsToKit(email, utms);
+    if (utms) { shareFullUrlWithKit(); sendUtmsToKit(email, utms); }
     btn.disabled = true; btn.textContent = 'Sending…';
   });
 });
