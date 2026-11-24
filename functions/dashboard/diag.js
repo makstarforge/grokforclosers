@@ -1,10 +1,13 @@
-// GET /dashboard/diag -> plain-text Fathom connection test (behind the /dashboard login middleware).
-import { runFathomDiag } from '../_lib/diag.js';
+// GET /dashboard/diag         -> plain-text Fathom connection test
+// GET /dashboard/diag?events  -> what Fathom's events list looks like and how it answers event queries
+// Both are behind the /dashboard login middleware and never include the API key.
+import { runFathomDiag, runEventDiag } from '../_lib/diag.js';
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   let report;
   try {
-    report = await runFathomDiag(env);
+    const wantsEvents = new URL(request.url).searchParams.has('events');
+    report = wantsEvents ? await runEventDiag(env) : await runFathomDiag(env);
   } catch (e) {
     report = { verdict: 'The test itself failed to run.', tests: [] };
   }
