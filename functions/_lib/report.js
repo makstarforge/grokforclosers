@@ -58,13 +58,35 @@ async function loadFathom({ fathom, siteId, base, errors, notes }) {
   const ctaEvents = events.filter((ev) => String(ev.name).startsWith(CTA_PREFIX));
   const signupEvents = events.filter((ev) => String(ev.name).startsWith(SIGNUP_PREFIX));
 
-  const eventRows = (ev, group) => fathom.aggregate({
-    ...base, entity: 'event', entity_id: ev.id, aggregates: 'conversions,unique_conversions',
+  // Fathom identifies an event either by its id or by its name (and the API's rules for how to
+  // pass that are not obvious), so find the form it accepts on the first event, then reuse it.
+  let variant = null;
+  const eventEntity = (ev, label) => ({
+    id: { entity_id: ev.id },
+    name_with_site_as_id: { entity_id: siteId, entity_name: ev.name },
+    name_with_site_id: { entity_name: ev.name, site_id: siteId },
+    name_only: { entity_name: ev.name },
+  })[label];
+  const eventQuery = (ev, label, group) => ({
+    ...base, entity: 'event', ...eventEntity(ev, label), aggregates: 'conversions,unique_conversions',
     date_grouping: 'day', ...(group ? { field_grouping: group } : {}), limit: 1000,
   });
+  const eventRows = (ev, group) => fathom.aggregate(eventQuery(ev, variant, group));
+  async function ensureVariant(ev, source) {
+    if (variant) return true;
+    const labels = [ev.id ? 'id' : null, 'name_with_site_as_id', 'name_with_site_id', 'name_only'].filter(Boolean);
+    const tried = [];
+    for (const label of labels) {
+      try { await fathom.aggregate(eventQuery(ev, label, null)); variant = label; return true; }
+      catch (e) { tried.push(label + ' -> ' + String(e.message).replace(/^Fathom \d+ on \/v1\/aggregations: /, '').slice(0, 150)); }
+    }
+    errors.push({ source, message: 'Fathom would not accept any way of identifying the event "' + ev.name + '". Tried: ' + tried.join(' | ') });
+    return false;
+  }
 
   // CTA clicks: try a per-page split, fall back to totals if Fathom won't group events by page.
-  if (ctaEvents.length) {
+  const ctaReady = ctaEvents.length ? await ensureVariant(ctaEvents[0], 'fathom clicks') : false;
+  if (ctaEvents.length && ctaReady) {
     let split = true;
     let results;
     try {
@@ -87,7 +109,7 @@ async function loadFathom({ fathom, siteId, base, errors, notes }) {
         n: num(r.conversions),
       })));
     }
-  } else if (!errors.some((x) => x.source === 'fathom events')) {
+  } else if (!ctaEvents.length && !errors.some((x) => x.source === 'fathom events')) {
     notes.push('No "CTA click: …" events have been recorded in Fathom yet.');
   }
 
@@ -105,7 +127,8 @@ async function loadFathom({ fathom, siteId, base, errors, notes }) {
       .filter((r) => normPath(r.pathname) === ONEPERCENT_PATH)
       .map((r) => ({ campaign: null, day: rowDay(r), visits: num(r.visits) }));
   }
-  if (signupEvents.length) {
+  const signupReady = signupEvents.length ? await ensureVariant(signupEvents[0], 'fathom signups') : false;
+  if (signupEvents.length && signupReady) {
     try {
       const res = await Promise.all(signupEvents.map((ev) => eventRows(ev, 'utm_campaign')));
       op.signupRows = [];
