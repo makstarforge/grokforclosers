@@ -1,9 +1,11 @@
 // Minimal read-only Stripe API client (server side only).
 // STRIPE_API_BASE exists only so tests can point at a local mock.
 
+import { cleanToken } from './secrets.js';
+
 export function makeStripe(env, fetchFn = fetch) {
   const base = (env && env.STRIPE_API_BASE) || 'https://api.stripe.com';
-  const key = env && env.STRIPE_SECRET_KEY;
+  const key = cleanToken(env && env.STRIPE_SECRET_KEY);
 
   async function get(path, params = {}) {
     const url = new URL(base + path);
