@@ -3,6 +3,7 @@
 import { TZ, dayKey, startOfDayEpochSec, rangeDays } from './dates.js';
 import { makeFathom } from './fathom.js';
 import { makeStripe } from './stripe.js';
+import { describeKey } from './secrets.js';
 
 export const SITE_ID_DEFAULT = 'JLCURLWB';           // public Fathom site id
 export const PAYMENT_LINK_CODE = '7sYbJ354pazNanZaPQ4Ja00'; // buy.stripe.com/<code>
@@ -290,6 +291,20 @@ export async function buildDashboard(env, daysCount, opts = {}) {
       byCampaign: (o.campaignSplit.visits || o.campaignSplit.signups)
         ? [...camp.values()].sort((a, b) => b.visits - a.visits || b.signups - a.signups) : null,
     };
+  }
+
+  // If an API rejected the key, say what we actually received (never the key itself).
+  const rejected = (src) => errors.some((e) => e.source.startsWith(src) && /\b40[13]\b/.test(e.message));
+  if (rejected('fathom')) {
+    errors.push({
+      source: 'fathom key check',
+      message: describeKey(env && env.FATHOM_API_KEY, 'FATHOM_API_KEY') +
+        ' Fathom still answered "Unauthenticated", so Fathom does not recognise this value as an API token. ' +
+        'Make sure the whole token was copied from app.usefathom.com/api (Fathom may only show it once), saved as FATHOM_API_KEY for Production, and that the Production deployment was retried afterwards.',
+    });
+  }
+  if (rejected('stripe')) {
+    errors.push({ source: 'stripe key check', message: describeKey(env && env.STRIPE_SECRET_KEY, 'STRIPE_SECRET_KEY') + ' Stripe rejected it.' });
   }
 
   const secrets = [env && env.FATHOM_API_KEY, env && env.STRIPE_SECRET_KEY, env && env.DASHBOARD_PASSWORD].filter(Boolean);

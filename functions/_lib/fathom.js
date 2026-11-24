@@ -2,9 +2,11 @@
 // Auth: "Authorization: Bearer <FATHOM_API_KEY>". Base URL: https://api.usefathom.com
 // FATHOM_API_BASE exists only so tests can point at a local mock.
 
+import { cleanToken } from './secrets.js';
+
 export function makeFathom(env, fetchFn = fetch) {
   const base = (env && env.FATHOM_API_BASE) || 'https://api.usefathom.com';
-  const token = env && env.FATHOM_API_KEY;
+  const token = cleanToken(env && env.FATHOM_API_KEY);
 
   async function get(path, params = {}) {
     const url = new URL(base + path);
