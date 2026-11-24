@@ -300,7 +300,7 @@ export async function buildDashboard(env, daysCount, opts = {}) {
       source: 'fathom key check',
       message: describeKey(env && env.FATHOM_API_KEY, 'FATHOM_API_KEY') +
         ' Fathom still answered "Unauthenticated", so Fathom does not recognise this value as an API token. ' +
-        'Make sure the whole token was copied from app.usefathom.com/api (Fathom may only show it once), saved as FATHOM_API_KEY for Production, and that the Production deployment was retried afterwards.',
+        'Make sure the whole token was copied from app.usefathom.com/api (Fathom may only show it once), saved as FATHOM_API_KEY for Production, and that the Production deployment was retried afterwards. For a step-by-step connection test, open /dashboard/diag.',
     });
   }
   if (rejected('stripe')) {
