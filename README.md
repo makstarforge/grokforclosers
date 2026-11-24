@@ -19,3 +19,8 @@ It runs as a Cloudflare Pages Function (`functions/`), so the password and API k
 | `STRIPE_SECRET_KEY` | Stripe key (a restricted read-only key is best) for purchases and coupon codes. |
 
 Numbers are bucketed in Eastern time. Never commit real keys to this repo.
+
+## /dashboard/kit-attribution (read-only diagnostic)
+
+Behind the dashboard login. Enter a subscriber's email and it asks Kit's v4 API (GET requests only, using the `KIT_API_KEY` secret) whether the subscriber's native attribution (UTM source/campaign) is returned, with and without `include=attribution`, on both the lookup-by-email and the individual-subscriber endpoints. It shows the subscriber ID, the HTTP statuses, the raw response JSON and a YES/NO verdict, and which read operations the key is allowed. It creates, changes and deletes nothing, and the key is never displayed.
+
