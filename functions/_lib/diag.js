@@ -113,3 +113,33 @@ export async function runEventDiag(env, fetchFn = fetch) {
   }
   return out;
 }
+
+// Read-only check of the Kit connection (the KIT_API_KEY secret). Creates and changes nothing.
+export async function runKitDiag(env, fetchFn = fetch) {
+  const token = cleanToken(env && env.KIT_API_KEY);
+  const base = (env && env.KIT_API_BASE) || 'https://api.kit.com';
+  const key = { present: Boolean(token), length: token.length, firstTwo: token ? token.slice(0, 2) : null, lastTwo: token ? token.slice(-2) : null };
+  if (!token) return { key, verdict: 'KIT_API_KEY is empty or not set for this environment, so UTM tagging is switched off (signups still work).', checks: [] };
+  const headers = { 'X-Kit-Api-Key': token, Accept: 'application/json' };
+  const check = async (label, path) => {
+    try {
+      const res = await fetchFn(base + path, { headers });
+      const text = await res.text();
+      let j = null; try { j = JSON.parse(text); } catch (e) { /* not json */ }
+      return { check: label, status: res.status, topLevelFields: j && typeof j === 'object' ? Object.keys(j) : undefined, pagination: j && j.pagination ? Object.keys(j.pagination) : undefined,
+        body: res.ok ? undefined : text.replace(/\s+/g, ' ').trim().slice(0, 160) };
+    } catch (e) { return { check: label, error: String(e.message).slice(0, 120) }; }
+  };
+  const checks = await Promise.all([
+    check('List tags', '/v4/tags?per_page=1'),
+    check('Look up a subscriber by email (a made-up address)', '/v4/subscribers?email_address=utm-check%40example.invalid&status=all'),
+  ]);
+  const allOk = checks.every((c) => c.status >= 200 && c.status < 300);
+  const bad = checks.find((c) => !(c.status >= 200 && c.status < 300));
+  return {
+    key, checks,
+    verdict: allOk
+      ? 'Kit accepted the key and both lookups worked. (This test only reads; it cannot confirm that creating and applying a tag works. A real signup test does that.)'
+      : 'Kit did not accept one of the checks: "' + bad.check + '" -> ' + (bad.status || bad.error) + '. See the details above; a 401 means the key is not valid.',
+  };
+}
