@@ -160,23 +160,53 @@ h2{font-weight:900;font-stretch:108%;font-size:clamp(28px,4vw,40px);line-height:
 
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
-/* Posts straight to the Kit form (id 10176758). Kit then redirects to the
-   "You're in" page set in the form's settings. JS only validates the email. */
-/* UTM capture: read utm_* from the landing URL (remembered for this tab in case the visitor reloads
-   without the query string). The post to Kit is NOT changed in any way; the UTMs only go to our own
-   /api/kit-utm endpoint, which tags the new subscriber. With no UTMs the signup is untouched. */
+/* Normal signups (no UTMs in the link) post straight to the Kit form (id 10176758). Kit then redirects to the
+   "You're in" page set in the form's settings. JS only validates the email.
+
+   UTM links (utm_source, utm_medium, utm_campaign, utm_content, utm_term, remembered for this tab in case the
+   visitor reloads without the query string) sign up through our own server instead (/api/subscribe): it adds
+   the person to the same Kit form (so the course automation runs), passes the landing URL to Kit as the
+   referrer, and applies the "<utm_source>-<utm_campaign>" tag. On ANY problem the page falls back to the
+   normal post to Kit above, so a signup is never lost. */
 var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 function readUtms() {
   var out = {}, found = false;
   try {
     var q = new URLSearchParams(window.location.search);
     UTM_KEYS.forEach(function (k) { var v = (q.get(k) || '').trim(); if (v) { out[k] = v.slice(0, 100); found = true; } });
-    if (found) { try { sessionStorage.setItem('gfc_utms', JSON.stringify(out)); } catch (e) {} }
+    if (found) { try { sessionStorage.setItem('gfc_utms', JSON.stringify(out)); sessionStorage.setItem('gfc_landing', window.location.href); } catch (e) {} }
     else { try { var saved = JSON.parse(sessionStorage.getItem('gfc_utms') || 'null'); if (saved && typeof saved === 'object') { out = saved; found = Object.keys(out).length > 0; } } catch (e) {} }
   } catch (e) {}
   return found ? out : null;
 }
 readUtms(); /* remember them as soon as the visitor lands */
+var THANK_YOU_URL = 'https://one-percent-closer.vercel.app/youre-in'; /* the "You're in" page Kit redirects to */
+var API_TIMEOUT_MS = 12000;
+var pageLoadedAt = Date.now();
+function track(name) { try { if (window.fathom && window.fathom.trackEvent) window.fathom.trackEvent(name); } catch (e) {} }
+function landingUrl() { try { return sessionStorage.getItem('gfc_landing') || window.location.href; } catch (e) { return window.location.href; } }
+function apiSignup(form, email, utms) {
+  /* Always resolves: { ok: true } or { ok: false, step } */
+  return new Promise(function (resolve) {
+    var done = false;
+    var timer = setTimeout(function () { finish({ ok: false, step: 'timeout' }); }, API_TIMEOUT_MS);
+    function finish(r) { if (done) return; done = true; clearTimeout(timer); resolve(r); }
+    try {
+      var nameInput = form.querySelector('input[name="fields[first_name]"]');
+      var body = { email: email, first_name: nameInput ? nameInput.value.trim() : '', referrer: landingUrl(), elapsed: Date.now() - pageLoadedAt };
+      UTM_KEYS.forEach(function (k) { if (utms[k]) body[k] = utms[k]; });
+      fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (res) { return res.json().then(function (j) { return j; }, function () { return { ok: false, step: 'bad_response' }; }); })
+        .then(finish, function () { finish({ ok: false, step: 'network' }); });
+    } catch (e) { finish({ ok: false, step: 'script_error' }); }
+  });
+}
+function fallbackToKit(form, email, utms, step) {
+  /* The original path: post the form to Kit exactly as a normal signup (plus a best-effort tag request). */
+  track('Signup fallback: ' + step);
+  sendUtmsToKit(email, utms);
+  HTMLFormElement.prototype.submit.call(form);
+}
 function sendUtmsToKit(email, utms) {
   /* Kit tags the new subscriber "<utm_source>-<utm_campaign>" (server side, /api/kit-utm). Fire and forget. */
   if (!utms.utm_source || !utms.utm_campaign) return;
@@ -197,9 +227,14 @@ document.querySelectorAll('[data-signup]').forEach(function (form) {
       msg.textContent = 'Please enter a valid email address.'; msg.classList.add('err'); form.email_address.focus(); return;
     }
     try { if (window.fathom && window.fathom.trackEvent) window.fathom.trackEvent('Signup submit: ' + (form.classList.contains('signup-sm') ? 'Bottom form' : 'Hero form')); } catch (err) {}
-    var utms = readUtms();
-    if (utms) sendUtmsToKit(email, utms);
     btn.disabled = true; btn.textContent = 'Sending…';
+    var utms = readUtms();
+    if (!utms) return; /* no UTMs: the normal signup, the browser posts the form to Kit exactly as before */
+    e.preventDefault();
+    apiSignup(form, email, utms).then(function (r) {
+      if (r && r.ok) { window.location.assign(THANK_YOU_URL); return; }
+      fallbackToKit(form, email, utms, (r && r.step) || 'unknown');
+    });
   });
 });
 window.addEventListener('pageshow', function () {

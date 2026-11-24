@@ -4,20 +4,10 @@
 // It answers 204 immediately and does the Kit work in the background, so it can never slow down or
 // break the signup. It does nothing unless the KIT_API_KEY secret is set.
 import { applyUtmTag } from '../_lib/kit.js';
+import { originAllowed } from '../_lib/origin.js';
 
 const MAX_BODY_BYTES = 4096;
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
-
-function originAllowed(request) {
-  const raw = request.headers.get('Origin') || request.headers.get('Referer') || '';
-  let host;
-  try { host = new URL(raw).hostname; } catch (e) { return false; }
-  if (host === 'grokforclosers.com' || host === 'www.grokforclosers.com' || host.endsWith('.grokforclosers.pages.dev')) return true;
-  // Local development only: allowed when the request itself is addressed to localhost (never true in production).
-  let self;
-  try { self = new URL(request.url).hostname; } catch (e) { return false; }
-  return (self === 'localhost' || self === '127.0.0.1') && host === self;
-}
 
 const noContent = () => new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
 

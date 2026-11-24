@@ -3,6 +3,7 @@
 // KIT_API_BASE exists only so tests can point at a local mock.
 import { cleanToken } from './secrets.js';
 
+export const FORM_ID_DEFAULT = '10176758'; // the Kit form the /onepercent page posts to
 const NEW_SUBSCRIBER_WINDOW_MS = 30 * 60 * 1000; // only tag people who signed up in the last 30 minutes
 const WAIT_SCHEDULE_MS = [0, 2000, 3000, 5000, 8000, 10000]; // Kit creates the subscriber just after the form post
 
@@ -19,6 +20,10 @@ export function tagNameFor(source, campaign) {
   const s = sanitizePart(source);
   const c = sanitizePart(campaign);
   return s && c ? s + '-' + c : null;
+}
+
+function stepError(step, status) {
+  return Object.assign(new Error('Kit ' + status + ' at ' + step), { step, status });
 }
 
 export function makeKit(env, fetchFn = fetch) {
@@ -70,6 +75,27 @@ export function makeKit(env, fetchFn = fetch) {
       return r.ok && r.json && r.json.tag ? r.json.tag : null;
     },
 
+    // Upsert: creates the subscriber, or returns the existing one.
+    async createSubscriber({ email, firstName }) {
+      const r = await call('POST', '/v4/subscribers', { body: { email_address: email, ...(firstName ? { first_name: firstName } : {}) } });
+      const sub = r.json && r.json.subscriber;
+      if (!r.ok || !sub || !sub.id) throw stepError('create_subscriber', r.status);
+      return sub;
+    },
+
+    // Subscribes them to the form (this is what starts the form's automations). `referrer` is the landing URL,
+    // which Kit reads the UTM parameters from.
+    async addToForm(formId, subscriber, email, referrer) {
+      const extra = referrer ? { referrer } : {};
+      let r = await call('POST', '/v4/forms/' + encodeURIComponent(formId) + '/subscribers/' + encodeURIComponent(subscriber.id), { body: extra });
+      if (r.ok) return;
+      if (r.status === 404 || r.status === 405) {
+        r = await call('POST', '/v4/forms/' + encodeURIComponent(formId) + '/subscribers', { body: { email_address: email, ...extra } });
+        if (r.ok) return;
+      }
+      throw stepError('add_to_form', r.status);
+    },
+
     async tagSubscriber(tagId, email) {
       const r = await call('POST', '/v4/tags/' + encodeURIComponent(tagId) + '/subscribers', { body: { email_address: email } });
       if (!r.ok) throw new Error('Kit ' + r.status + ' applying the tag');
@@ -101,7 +127,11 @@ export async function applyUtmTag({ email, utm_source, utm_campaign }, env, deps
   const createdAt = Date.parse(subscriber.created_at);
   if (!Number.isFinite(createdAt) || now() - createdAt > NEW_SUBSCRIBER_WINDOW_MS) return { skipped: 'not a new subscriber' };
 
-  // Look up first; only create if missing; re-look-up if a concurrent signup created it first.
+  return ensureTagAndApply(kit, name, email);
+}
+
+// Look the tag up first; only create it if missing; re-look-up if a concurrent signup created it first.
+async function ensureTagAndApply(kit, name, email) {
   let tag = await kit.findTag(name);
   let created = false;
   if (!tag) {
@@ -110,7 +140,32 @@ export async function applyUtmTag({ email, utm_source, utm_campaign }, env, deps
     if (!tag) tag = await kit.findTag(name);
   }
   if (!tag) return { skipped: 'could not find or create the tag' };
-
   await kit.tagSubscriber(tag.id, email);
   return { tagged: true, tag: name, created };
+}
+
+// Server-side signup for /onepercent links that carry UTMs: add the person to the Kit form (so the course
+// automation runs), pass the landing URL as the referrer, and apply the "<source>-<campaign>" tag.
+// Returns { ok: true, tagged?, tagError? } or { ok: false, step, status? }. A tagging problem never fails the signup.
+export async function signUp(input, env, deps = {}) {
+  const kit = makeKit(env, deps.fetchFn || fetch);
+  if (!kit.configured) return { ok: false, step: 'not_configured' };
+  const formId = (env && env.KIT_FORM_ID) || FORM_ID_DEFAULT;
+  try {
+    const subscriber = await kit.createSubscriber({ email: input.email, firstName: input.first_name });
+    await kit.addToForm(formId, subscriber, input.email, input.referrer);
+  } catch (e) {
+    return { ok: false, step: e.step || 'kit_error', status: e.status };
+  }
+  const out = { ok: true };
+  const name = tagNameFor(input.utm_source, input.utm_campaign);
+  if (name) {
+    try {
+      const r = await ensureTagAndApply(kit, name, input.email);
+      if (r.tagged) { out.tagged = true; out.tag = name; } else out.tagError = r.skipped;
+    } catch (e) {
+      out.tagError = String(e && e.message ? e.message : e).slice(0, 120);
+    }
+  }
+  return out;
 }
