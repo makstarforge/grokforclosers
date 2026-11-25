@@ -7,10 +7,10 @@ import { describeKey } from './secrets.js';
 
 export const SITE_ID_DEFAULT = 'JLCURLWB';           // public Fathom site id
 export const PAYMENT_LINK_CODE = '7sYbJ354pazNanZaPQ4Ja00'; // buy.stripe.com/<code>
-export const FUNNEL_PAGES = ['/', '/partner', '/sameday'];
+export const FUNNEL_PAGES = ['/', '/partner', '/sameday', '/blackfriday', '/cybermonday'];
 export const ONEPERCENT_PATH = '/onepercent';
 // Purchases are attributed to a page by the coupon code that page pre-fills.
-export const PAGE_BY_COUPON = { PARTNER500: '/partner', SAMEDAY: '/sameday' };
+export const PAGE_BY_COUPON = { PARTNER500: '/partner', SAMEDAY: '/sameday', CLOSER: '/blackfriday', CASH: '/cybermonday' };
 const CTA_PREFIX = 'CTA click:';
 const SIGNUP_PREFIX = 'Signup submit:';
 
