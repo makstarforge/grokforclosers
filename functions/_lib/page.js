@@ -132,7 +132,7 @@ summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
   }
   function renderFunnel(d){
     var f=d.funnel,v=f.visits,c=f.clicks,p=f.purchases;
-    var h=kpi('visits','Visits',v?fmt(v.total):'',v?'on /, /partner and /sameday':'',!v);
+    var h=kpi('visits','Visits',v?fmt(v.total):'',v?'on /, /partner, /sameday, /blackfriday and /cybermonday':'',!v);
     h+='<div class="rate"><span>clicks ÷ visits</span><b>'+((v&&c)?pct(c.total,v.total):'—')+'</b></div>';
     h+=kpi('clicks','Clicks',c?fmt(c.total):'','Join / buy button clicks',!c);
     h+='<div class="rate"><span>purchases ÷ clicks</span><b>'+((c&&p)?pct(p.total,c.total):'—')+'</b></div>';
